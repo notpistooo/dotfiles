@@ -1,7 +1,7 @@
-diff -u original/dwm/config.def.h suckless/dwm/config.def.h
---- original/dwm/config.def.h	2024-11-22 09:03:24.171344945 +0100
-+++ suckless/dwm/config.def.h	2024-11-16 19:01:28.544096208 +0100
-@@ -1,55 +1,60 @@
+diff -u dwm/config.def.h suckless/dwm/config.def.h
+--- dwm/config.def.h	2024-11-22 14:20:12.885794864 +0100
++++ suckless/dwm/config.def.h	2024-11-22 14:14:48.157351467 +0100
+@@ -1,55 +1,62 @@
  /* See LICENSE file for copyright and license details. */
  
 +#include "../colors.h"
@@ -21,6 +21,8 @@ diff -u original/dwm/config.def.h suckless/dwm/config.def.h
 -static const char col_gray3[]       = "#bbbbbb";
 -static const char col_gray4[]       = "#eeeeee";
 -static const char col_cyan[]        = "#005577";
++static const int splitstatus        = 1;        /* 1 for split status items */
++static const char *splitdelim        = ";";       /* Character used for separating status */
 +static const int vertpad            = 10;       /* vertical padding of bar */
 +static const int sidepad            = 10;       /* horizontal padding of bar */
 +static const char *fonts[]          = { "Cascadia Code:size=14" };
@@ -82,7 +84,7 @@ diff -u original/dwm/config.def.h suckless/dwm/config.def.h
  	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
  
  /* helper for spawning shell commands in the pre dwm-5.0 fashion */
-@@ -57,34 +62,48 @@
+@@ -57,34 +64,48 @@
  
  /* commands */
  static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
@@ -155,7 +157,7 @@ diff -u original/dwm/config.def.h suckless/dwm/config.def.h
  	TAGKEYS(                        XK_1,                      0)
  	TAGKEYS(                        XK_2,                      1)
  	TAGKEYS(                        XK_3,                      2)
-@@ -94,7 +113,12 @@
+@@ -94,7 +115,12 @@
  	TAGKEYS(                        XK_7,                      6)
  	TAGKEYS(                        XK_8,                      7)
  	TAGKEYS(                        XK_9,                      8)
@@ -169,47 +171,26 @@ diff -u original/dwm/config.def.h suckless/dwm/config.def.h
  };
  
  /* button definitions */
-Only in suckless/dwm/: config.h
-diff -u original/dwm/config.mk suckless/dwm/config.mk
---- original/dwm/config.mk	2024-11-22 09:03:24.171344945 +0100
-+++ suckless/dwm/config.mk	2024-11-16 18:51:24.257412022 +0100
-@@ -10,6 +10,8 @@
- X11INC = /usr/X11R6/include
- X11LIB = /usr/X11R6/lib
- 
-+BDINC = /usr/include/fribidi
-+
- # Xinerama, comment if you don't want it
- XINERAMALIBS  = -lXinerama
- XINERAMAFLAGS = -DXINERAMA
-@@ -20,10 +22,13 @@
+diff -u dwm/config.mk suckless/dwm/config.mk
+--- dwm/config.mk	2024-11-22 14:20:12.885794864 +0100
++++ suckless/dwm/config.mk	2024-11-22 14:12:40.963199250 +0100
+@@ -20,10 +20,11 @@
  # OpenBSD (uncomment)
  #FREETYPEINC = ${X11INC}/freetype2
  #MANPREFIX = ${PREFIX}/man
 +#KVMLIB = -lkvm
-+
-+BDLIBS = -lfribidi
  
  # includes and libs
--INCS = -I${X11INC} -I${FREETYPEINC}
+ INCS = -I${X11INC} -I${FREETYPEINC}
 -LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS}
-+INCS = -I${X11INC} -I${FREETYPEINC} -I$(BDINC)
-+LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} $(BDLIBS) -lX11-xcb -lxcb -lxcb-res ${KVMLIB}
++LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} -lX11-xcb -lxcb -lxcb-res ${KVMLIB}
  
  # flags
  CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700L -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}
-diff -u original/dwm/dwm.c suckless/dwm/dwm.c
---- original/dwm/dwm.c	2024-11-22 09:03:24.171344945 +0100
-+++ suckless/dwm/dwm.c	2024-11-16 18:53:13.407415149 +0100
-@@ -21,6 +21,7 @@
-  * To understand everything else, start reading main().
-  */
- #include <errno.h>
-+#include <fribidi.h>
- #include <locale.h>
- #include <signal.h>
- #include <stdarg.h>
-@@ -40,6 +41,13 @@
+diff -u dwm/dwm.c suckless/dwm/dwm.c
+--- dwm/dwm.c	2024-11-22 14:20:12.885794864 +0100
++++ suckless/dwm/dwm.c	2024-11-22 14:20:36.055909028 +0100
+@@ -40,6 +40,13 @@
  #include <X11/extensions/Xinerama.h>
  #endif /* XINERAMA */
  #include <X11/Xft/Xft.h>
@@ -223,7 +204,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  
  #include "drw.h"
  #include "util.h"
-@@ -51,8 +59,8 @@
+@@ -51,8 +58,8 @@
                                 * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
  #define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
  #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
@@ -234,7 +215,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  #define TAGMASK                 ((1 << LENGTH(tags)) - 1)
  #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
  
-@@ -91,9 +99,11 @@
+@@ -91,9 +98,11 @@
  	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
  	int bw, oldbw;
  	unsigned int tags;
@@ -247,7 +228,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	Monitor *mon;
  	Window win;
  };
-@@ -110,6 +120,7 @@
+@@ -110,6 +119,7 @@
  	void (*arrange)(Monitor *);
  } Layout;
  
@@ -255,7 +236,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  struct Monitor {
  	char ltsymbol[16];
  	float mfact;
-@@ -129,6 +140,7 @@
+@@ -129,6 +139,7 @@
  	Monitor *next;
  	Window barwin;
  	const Layout *lt[2];
@@ -263,7 +244,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  };
  
  typedef struct {
-@@ -137,15 +149,19 @@
+@@ -137,6 +148,8 @@
  	const char *title;
  	unsigned int tags;
  	int isfloating;
@@ -272,10 +253,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	int monitor;
  } Rule;
  
- /* function declarations */
-+static void apply_fribidi(char *str);
- static void applyrules(Client *c);
- static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
+@@ -146,6 +159,7 @@
  static void arrange(Monitor *m);
  static void arrangemon(Monitor *m);
  static void attach(Client *c);
@@ -283,7 +261,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  static void attachstack(Client *c);
  static void buttonpress(XEvent *e);
  static void checkotherwm(void);
-@@ -185,7 +201,10 @@
+@@ -185,7 +199,10 @@
  static void movemouse(const Arg *arg);
  static Client *nexttiled(Client *c);
  static void pop(Client *c);
@@ -294,7 +272,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  static void quit(const Arg *arg);
  static Monitor *recttomon(int x, int y, int w, int h);
  static void resize(Client *c, int x, int y, int w, int h, int interact);
-@@ -226,6 +245,7 @@
+@@ -226,6 +243,7 @@
  static void updatewindowtype(Client *c);
  static void updatewmhints(Client *c);
  static void view(const Arg *arg);
@@ -302,7 +280,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  static Client *wintoclient(Window w);
  static Monitor *wintomon(Window w);
  static int xerror(Display *dpy, XErrorEvent *ee);
-@@ -233,13 +253,22 @@
+@@ -233,6 +251,12 @@
  static int xerrorstart(Display *dpy, XErrorEvent *ee);
  static void zoom(const Arg *arg);
  
@@ -315,8 +293,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  /* variables */
  static const char broken[] = "broken";
  static char stext[256];
-+static char fribidi_text[256];
- static int screen;
+@@ -240,6 +264,8 @@
  static int sw, sh;           /* X display screen geometry width, height */
  static int bh;               /* bar height */
  static int lrpad;            /* sum of left and right padding for text */
@@ -325,7 +302,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  static int (*xerrorxlib)(Display *, XErrorEvent *);
  static unsigned int numlockmask = 0;
  static void (*handler[LASTEvent]) (XEvent *) = {
-@@ -267,14 +296,40 @@
+@@ -267,9 +293,20 @@
  static Monitor *mons, *selmon;
  static Window root, wmcheckwin;
  
@@ -346,27 +323,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  /* compile-time check if all tags fit into an unsigned int bit array. */
  struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
  
- /* function implementations */
- void
-+apply_fribidi(char *str)
-+{
-+	FriBidiStrIndex len = strlen(str);
-+	FriBidiChar logical[256];
-+	FriBidiChar visual[256];
-+	FriBidiParType base = FRIBIDI_PAR_ON;
-+	FriBidiCharSet charset;
-+
-+	charset = fribidi_parse_charset("UTF-8");
-+	len = fribidi_charset_to_unicode(charset, str, len, logical);
-+	fribidi_log2vis(logical, len, &base, visual, NULL, NULL, NULL);
-+	fribidi_unicode_to_charset(charset, visual, len, fribidi_text);
-+}
-+
-+void
- applyrules(Client *c)
- {
- 	const char *class, *instance;
-@@ -296,6 +351,8 @@
+@@ -296,6 +333,8 @@
  		&& (!r->class || strstr(class, r->class))
  		&& (!r->instance || strstr(instance, r->instance)))
  		{
@@ -375,7 +332,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  			c->isfloating = r->isfloating;
  			c->tags |= r->tags;
  			for (m = mons; m && m->num != r->monitor; m = m->next);
-@@ -408,6 +465,15 @@
+@@ -408,6 +447,15 @@
  }
  
  void
@@ -391,7 +348,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  attachstack(Client *c)
  {
  	c->snext = c->mon->stack;
-@@ -415,6 +481,53 @@
+@@ -415,6 +463,53 @@
  }
  
  void
@@ -445,7 +402,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  buttonpress(XEvent *e)
  {
  	unsigned int i, x, click;
-@@ -432,9 +545,15 @@
+@@ -432,9 +527,15 @@
  	}
  	if (ev->window == selmon->barwin) {
  		i = x = 0;
@@ -463,7 +420,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  		if (i < LENGTH(tags)) {
  			click = ClkTagBar;
  			arg.ui = 1 << i;
-@@ -523,7 +642,7 @@
+@@ -523,7 +624,7 @@
  		if (cme->data.l[1] == netatom[NetWMFullscreen]
  		|| cme->data.l[2] == netatom[NetWMFullscreen])
  			setfullscreen(c, (cme->data.l[0] == 1 /* _NET_WM_STATE_ADD    */
@@ -472,7 +429,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	} else if (cme->message_type == netatom[NetActiveWindow]) {
  		if (c != selmon->sel && !c->isurgent)
  			seturgent(c, 1);
-@@ -553,7 +672,6 @@
+@@ -553,7 +654,6 @@
  configurenotify(XEvent *e)
  {
  	Monitor *m;
@@ -480,7 +437,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	XConfigureEvent *ev = &e->xconfigure;
  	int dirty;
  
-@@ -566,10 +684,7 @@
+@@ -566,10 +666,7 @@
  			drw_resize(drw, sw, bh);
  			updatebars();
  			for (m = mons; m; m = m->next) {
@@ -492,7 +449,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  			}
  			focus(NULL);
  			arrange(NULL);
-@@ -633,6 +748,7 @@
+@@ -633,6 +730,7 @@
  createmon(void)
  {
  	Monitor *m;
@@ -500,7 +457,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  
  	m = ecalloc(1, sizeof(Monitor));
  	m->tagset[0] = m->tagset[1] = 1;
-@@ -643,6 +759,20 @@
+@@ -643,6 +741,20 @@
  	m->lt[0] = &layouts[0];
  	m->lt[1] = &layouts[1 % LENGTH(layouts)];
  	strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
@@ -521,7 +478,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	return m;
  }
  
-@@ -654,6 +784,9 @@
+@@ -654,6 +766,9 @@
  
  	if ((c = wintoclient(ev->window)))
  		unmanage(c, 1);
@@ -531,13 +488,29 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  }
  
  void
-@@ -710,23 +843,22 @@
- 	if (m == selmon) { /* status is only drawn on selected monitor */
- 		drw_setscheme(drw, scheme[SchemeNorm]);
- 		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+@@ -698,51 +813,49 @@
+ drawbar(Monitor *m)
+ {
+ 	int x, w, tw = 0;
+-	int boxs = drw->fonts->h / 9;
+-	int boxw = drw->fonts->h / 6 + 2;
++	//int boxs = drw->fonts->h / 9;
++	//int boxw = drw->fonts->h / 6 + 2;
+ 	unsigned int i, occ = 0, urg = 0;
+ 	Client *c;
+ 
+ 	if (!m->showbar)
+ 		return;
+ 
+-	/* draw status first so it can be overdrawn by tags later */
+-	if (m == selmon) { /* status is only drawn on selected monitor */
+-		drw_setscheme(drw, scheme[SchemeNorm]);
+-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
 -		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
-+		drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
- 	}
+-	}
++	char *mstext;
++	char *rstext;
++	int msx;
  
  	for (c = m->clients; c; c = c->next) {
 -		occ |= c->tags;
@@ -560,23 +533,34 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  		x += w;
  	}
  	w = TEXTW(m->ltsymbol);
-@@ -736,12 +868,13 @@
- 	if ((w = m->ww - tw - x) > bh) {
- 		if (m->sel) {
- 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+ 	drw_setscheme(drw, scheme[SchemeNorm]);
+ 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+ 
+-	if ((w = m->ww - tw - x) > bh) {
+-		if (m->sel) {
+-			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 -			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
-+			apply_fribidi(m->sel->name);
-+			drw_text(drw, x, 0, w, bh, lrpad / 2, fribidi_text, 0);
- 			if (m->sel->isfloating)
- 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
- 		} else {
- 			drw_setscheme(drw, scheme[SchemeNorm]);
+-			if (m->sel->isfloating)
+-				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+-		} else {
+-			drw_setscheme(drw, scheme[SchemeNorm]);
 -			drw_rect(drw, x, 0, w, bh, 1, 1);
-+			drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
++	drw_setscheme(drw, scheme[SchemeNorm]);
++	drw_rect(drw, x, 0, m->ww - x, bh, 1, 1);
++
++	if (m == selmon) { /* status is only drawn on selected monitor */
++		rstext = strdup(stext);
++		if (splitstatus) {
++			mstext = strsep(&rstext, splitdelim);
++			msx = (m->ww - TEXTW(mstext) + lrpad) / 2; /* x position of middle status text */
++			drw_text(drw, msx, 0, TEXTW(mstext) - lrpad, bh, 0, mstext, 0);
  		}
++		tw = TEXTW(rstext) - lrpad + 2; /* 2px right padding */
++		drw_text(drw, m->ww - tw, 0, tw, bh, 0, rstext, 0);
  	}
  	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
-@@ -832,6 +965,7 @@
+ }
+@@ -832,6 +945,7 @@
  	unfocus(selmon->sel, 0);
  	selmon = m;
  	focus(NULL);
@@ -584,7 +568,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  }
  
  void
-@@ -979,7 +1113,7 @@
+@@ -979,7 +1093,7 @@
  void
  incnmaster(const Arg *arg)
  {
@@ -593,7 +577,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	arrange(selmon);
  }
  
-@@ -1030,12 +1164,13 @@
+@@ -1030,12 +1144,13 @@
  void
  manage(Window w, XWindowAttributes *wa)
  {
@@ -608,7 +592,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	/* geometry */
  	c->x = c->oldx = wa->x;
  	c->y = c->oldy = wa->y;
-@@ -1050,6 +1185,7 @@
+@@ -1050,6 +1165,7 @@
  	} else {
  		c->mon = selmon;
  		applyrules(c);
@@ -616,7 +600,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	}
  
  	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
-@@ -1067,13 +1203,15 @@
+@@ -1067,13 +1183,15 @@
  	updatewindowtype(c);
  	updatesizehints(c);
  	updatewmhints(c);
@@ -633,7 +617,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	attachstack(c);
  	XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
  		(unsigned char *) &(c->win), 1);
-@@ -1084,6 +1222,8 @@
+@@ -1084,6 +1202,8 @@
  	c->mon->sel = c;
  	arrange(c->mon);
  	XMapWindow(dpy, c->win);
@@ -642,7 +626,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	focus(NULL);
  }
  
-@@ -1152,8 +1292,6 @@
+@@ -1152,8 +1272,6 @@
  
  	if (!(c = selmon->sel))
  		return;
@@ -651,7 +635,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	restack(selmon);
  	ocx = c->x;
  	ocy = c->y;
-@@ -1217,6 +1355,16 @@
+@@ -1217,6 +1335,16 @@
  	arrange(c->mon);
  }
  
@@ -668,7 +652,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  void
  propertynotify(XEvent *e)
  {
-@@ -1255,6 +1403,37 @@
+@@ -1255,6 +1383,37 @@
  }
  
  void
@@ -706,7 +690,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  quit(const Arg *arg)
  {
  	running = 0;
-@@ -1285,12 +1464,38 @@
+@@ -1285,12 +1444,39 @@
  resizeclient(Client *c, int x, int y, int w, int h)
  {
  	XWindowChanges wc;
@@ -730,6 +714,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
 +	} else {
 +		gapoffset = gappx;
 +		gapincr = 2 * gappx;
++		
 +		/* Remove border and gap if layout is monocle or only one client */
 +		/*if (c->mon->lt[c->mon->sellt]->arrange == monocle || n == 1) {
 +			gapoffset = 0;
@@ -749,7 +734,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
  	configure(c);
  	XSync(dpy, False);
-@@ -1307,8 +1512,6 @@
+@@ -1307,8 +1493,6 @@
  
  	if (!(c = selmon->sel))
  		return;
@@ -758,7 +743,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	restack(selmon);
  	ocx = c->x;
  	ocy = c->y;
-@@ -1374,6 +1577,8 @@
+@@ -1374,6 +1558,8 @@
  				wc.sibling = c->win;
  			}
  	}
@@ -767,7 +752,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	XSync(dpy, False);
  	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
  }
-@@ -1426,7 +1631,7 @@
+@@ -1426,7 +1612,7 @@
  	detachstack(c);
  	c->mon = m;
  	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
@@ -776,7 +761,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	attachstack(c);
  	focus(NULL);
  	arrange(NULL);
-@@ -1485,24 +1690,10 @@
+@@ -1485,24 +1671,10 @@
  		XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
  			PropModeReplace, (unsigned char*)&netatom[NetWMFullscreen], 1);
  		c->isfullscreen = 1;
@@ -801,7 +786,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	}
  }
  
-@@ -1510,9 +1701,9 @@
+@@ -1510,9 +1682,9 @@
  setlayout(const Arg *arg)
  {
  	if (!arg || !arg->v || arg->v != selmon->lt[selmon->sellt])
@@ -813,7 +798,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
  	if (selmon->sel)
  		arrange(selmon);
-@@ -1531,7 +1722,7 @@
+@@ -1531,7 +1703,7 @@
  	f = arg->f < 1.0 ? arg->f + selmon->mfact : arg->f - 1.0;
  	if (f < 0.05 || f > 0.95)
  		return;
@@ -822,7 +807,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	arrange(selmon);
  }
  
-@@ -1562,7 +1753,10 @@
+@@ -1562,7 +1734,10 @@
  		die("no fonts could be loaded.");
  	lrpad = drw->fonts->h;
  	bh = drw->fonts->h + 2;
@@ -833,7 +818,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	/* init atoms */
  	utf8string = XInternAtom(dpy, "UTF8_STRING", False);
  	wmatom[WMProtocols] = XInternAtom(dpy, "WM_PROTOCOLS", False);
-@@ -1633,7 +1827,7 @@
+@@ -1633,7 +1808,7 @@
  	if (ISVISIBLE(c)) {
  		/* show clients top down */
  		XMoveWindow(dpy, c->win, c->x, c->y);
@@ -842,7 +827,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  			resize(c, c->x, c->y, c->w, c->h, 0);
  		showhide(c->snext);
  	} else {
-@@ -1700,7 +1894,7 @@
+@@ -1700,7 +1875,7 @@
  	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
  		if (i < m->nmaster) {
  			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
@@ -851,7 +836,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  			if (my + HEIGHT(c) < m->wh)
  				my += HEIGHT(c);
  		} else {
-@@ -1714,9 +1908,9 @@
+@@ -1714,9 +1889,9 @@
  void
  togglebar(const Arg *arg)
  {
@@ -863,7 +848,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	arrange(selmon);
  }
  
-@@ -1725,8 +1919,6 @@
+@@ -1725,8 +1900,6 @@
  {
  	if (!selmon->sel)
  		return;
@@ -872,7 +857,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
  	if (selmon->sel->isfloating)
  		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
-@@ -1753,9 +1945,33 @@
+@@ -1753,9 +1926,33 @@
  toggleview(const Arg *arg)
  {
  	unsigned int newtagset = selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
@@ -906,7 +891,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  		focus(NULL);
  		arrange(selmon);
  	}
-@@ -1780,6 +1996,20 @@
+@@ -1780,6 +1977,20 @@
  	Monitor *m = c->mon;
  	XWindowChanges wc;
  
@@ -927,7 +912,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  	detach(c);
  	detachstack(c);
  	if (!destroyed) {
-@@ -1795,9 +2025,12 @@
+@@ -1795,9 +2006,12 @@
  		XUngrabServer(dpy);
  	}
  	free(c);
@@ -943,7 +928,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  }
  
  void
-@@ -1827,7 +2060,7 @@
+@@ -1827,7 +2041,7 @@
  	for (m = mons; m; m = m->next) {
  		if (m->barwin)
  			continue;
@@ -952,7 +937,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  				CopyFromParent, DefaultVisual(dpy, screen),
  				CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
  		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
-@@ -1842,11 +2075,11 @@
+@@ -1842,11 +2056,11 @@
  	m->wy = m->my;
  	m->wh = m->mh;
  	if (m->showbar) {
@@ -968,7 +953,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  }
  
  void
-@@ -1914,7 +2147,7 @@
+@@ -1914,7 +2128,7 @@
  				m->clients = c->next;
  				detachstack(c);
  				c->mon = mons;
@@ -977,7 +962,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  				attachstack(c);
  			}
  			if (m == selmon)
-@@ -2052,15 +2285,193 @@
+@@ -2052,15 +2266,193 @@
  void
  view(const Arg *arg)
  {
@@ -1172,7 +1157,7 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  Client *
  wintoclient(Window w)
  {
-@@ -2150,10 +2561,12 @@
+@@ -2150,10 +2542,12 @@
  		fputs("warning: no locale support\n", stderr);
  	if (!(dpy = XOpenDisplay(NULL)))
  		die("dwm: cannot open display");
@@ -1186,8 +1171,8 @@ diff -u original/dwm/dwm.c suckless/dwm/dwm.c
  		die("pledge");
  #endif /* __OpenBSD__ */
  	scan();
-Only in original/dwm/: dwm.png
-Only in original/dwm/: .git
-Only in original/dwm/: LICENSE
+Only in dwm/: dwm.png
+Only in dwm/: .git
+Only in dwm/: LICENSE
 Only in suckless/dwm/: patches
-Only in original/dwm/: README
+Only in dwm/: README

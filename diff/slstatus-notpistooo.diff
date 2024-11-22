@@ -1,21 +1,21 @@
-Common subdirectories: original/slstatus/components and suckless/slstatus/components
-diff -u original/slstatus/config.def.h suckless/slstatus/config.def.h
---- original/slstatus/config.def.h	2024-11-22 09:03:43.426542953 +0100
-+++ suckless/slstatus/config.def.h	2024-11-21 17:03:33.244566449 +0100
-@@ -65,5 +65,9 @@
+Common subdirectories: slstatus/components and suckless/slstatus/components
+diff -u slstatus/config.def.h suckless/slstatus/config.def.h
+--- slstatus/config.def.h	2024-11-22 14:17:01.381459476 +0100
++++ suckless/slstatus/config.def.h	2024-11-22 14:16:22.871243081 +0100
+@@ -65,5 +65,10 @@
   */
  static const struct arg args[] = {
  	/* function format          argument */
 -	{ datetime, "%s",           "%F %T" },
-+	{ cpu_perc,    "   %s% | ",   NULL },
++	{ datetime,    "%s;",         "%d-%m-%Y" },
++	{ cpu_perc,    "%s% | ",      NULL },
 +	{ ram_perc,    "%s% | ",      NULL },
 +	{ vol_perc,    "%s",          "Master" },
 +	{ keymap,      "% | %s | ",   NULL },
-+	{ datetime,    "%s ",         "%d-%m-%Y | %I:%M %p" },
++	{ datetime,    "%s   ",       "%I:%M %p" },
  };
-Only in suckless/slstatus/: config.h
-diff -u original/slstatus/config.mk suckless/slstatus/config.mk
---- original/slstatus/config.mk	2024-11-22 09:03:43.426542953 +0100
+diff -u slstatus/config.mk suckless/slstatus/config.mk
+--- slstatus/config.mk	2024-11-22 14:17:01.381459476 +0100
 +++ suckless/slstatus/config.mk	2024-11-16 19:02:38.277431519 +0100
 @@ -11,9 +11,9 @@
  X11LIB = /usr/X11R6/lib
@@ -29,7 +29,7 @@ diff -u original/slstatus/config.mk suckless/slstatus/config.mk
  # OpenBSD: add -lsndio
  # FreeBSD: add -lkvm -lsndio
  LDLIBS   = -lX11
-Only in original/slstatus/: .git
-Only in original/slstatus/: LICENSE
+Only in slstatus/: .git
+Only in slstatus/: LICENSE
 Only in suckless/slstatus/: patches
-Only in original/slstatus/: README
+Only in slstatus/: README
