@@ -12,7 +12,7 @@
   },
   "river/window": {
     "max-length": 75,
-    "on-click": "alacritty -e btop",
+    "on-click": "alacritty -e htop",
     "tooltip": false
   },
   "cpu": {
