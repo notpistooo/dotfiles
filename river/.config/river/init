@@ -3,8 +3,10 @@
 # Autostart
 
 riverctl spawn "killall waybar; sleep 0.2; waybar"
-riverctl spawn "thunar --daemon"
 riverctl spawn "wbg ~/.cache/current"
+riverctl spawn "thunar --daemon"
+riverctl spawn "fdm --hidden"
+
 riverctl spawn "codium"
 riverctl spawn "discord"
 riverctl spawn "telegram-desktop"
@@ -72,17 +74,18 @@ riverctl map normal Super+Shift+Control 0 toggle-view-tags $tags
 
 riverctl rule-add -app-id "QjackCtl" float
 
-riverctl rule-add -app-id "codium" tags $((1 << 0))
-riverctl rule-add -app-id "org.telegram.desktop" tags $((1 << 6))
-riverctl rule-add -app-id "discord" tags $((1 << 7))
-riverctl rule-add -app-id "zen-alpha" tags $((1 << 8))
-riverctl rule-add -app-id "Logseq" tags $((1 << 9))
-
 riverctl rule-add -app-id "codium" ssd
 riverctl rule-add -app-id "org.telegram.desktop" ssd
 riverctl rule-add -app-id "discord" ssd
 riverctl rule-add -app-id "zen-alpha" ssd
 riverctl rule-add -app-id "Logseq" ssd
+
+riverctl rule-add -app-id "codium" tags $((1 << 0))
+riverctl rule-add -app-id "fdm" tags $((1 << 5))
+riverctl rule-add -app-id "org.telegram.desktop" tags $((1 << 6))
+riverctl rule-add -app-id "discord" tags $((1 << 7))
+riverctl rule-add -app-id "zen-alpha" tags $((1 << 8))
+riverctl rule-add -app-id "Logseq" tags $((1 << 9))
 
 # Config
 
