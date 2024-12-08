@@ -1,0 +1,36 @@
+* {
+	all: unset;
+	font-family: "Cascadia Code";
+	font-size: 16px;
+}
+
+window#waybar {
+	background-color: #1e1e2e;
+	color: #ccd6f4;
+}
+
+#tags button {
+	padding: 0 10px;
+}
+
+#tags button.occupied {
+	background-color: #313244;
+}
+
+#tags button.focused {
+	background-color: #cba6f7;
+	color: #1e1e2e;
+}
+
+#tags button.urgent {
+	background-color: #cdd6f4;
+	color: #1e1e2e;
+}
+
+#cpu,
+#memory,
+#wireplumber,
+#clock {
+	border-left: 2px solid #cdd6f4;
+	padding: 0 8px;
+}

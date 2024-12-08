@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Autostart
+
+riverctl spawn "killall waybar; sleep 0.2; waybar"
+riverctl spawn "thunar --daemon"
+riverctl spawn "wbg ~/.cache/current"
+riverctl spawn "codium"
+riverctl spawn "discord"
+riverctl spawn "telegram-desktop"
+riverctl spawn "zen-browser"
+riverctl spawn "logseq"
+
+# Keybindings
+
+riverctl map normal Super+Shift Escape exit
+riverctl map normal Super+Shift C close
+riverctl map normal Super+Shift B spawn "killall waybar; sleep 0.2; waybar"
+riverctl map normal Super Return zoom
+
+riverctl map normal Super Space spawn "tofi-drun -c ~/.config/tofi/dmenu"
+riverctl map normal Super+Shift Return spawn "alacritty"
+
+riverctl map normal Super+Shift E spawn "thunar"
+riverctl map normal Super+Shift Q spawn "logoutmenu.sh"
+riverctl map normal None Print spawn "screenshot.sh"
+riverctl map normal Shift Print spawn "screenshot.sh select"
+riverctl map normal None XF86AudioMute spawn "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+riverctl map normal None XF86AudioRaiseVolume spawn "wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%+"
+riverctl map normal None XF86AudioLowerVolume spawn "wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%-"
+
+riverctl map normal Super k swap up
+riverctl map normal Super j swap down
+riverctl map normal Super h focus-view previous
+riverctl map normal Super l focus-view next
+
+riverctl map normal Super+Shift k send-layout-cmd rivertile "main-count +1"
+riverctl map normal Super+Shift j send-layout-cmd rivertile "main-count -1"
+riverctl map normal Super+Shift h send-layout-cmd rivertile "main-ratio -0.05"
+riverctl map normal Super+Shift l send-layout-cmd rivertile "main-ratio +0.05"
+
+riverctl map normal Super Left focus-output next
+riverctl map normal Super Right focus-output previous
+riverctl map normal Super+Shift Left send-to-output next
+riverctl map normal Super+Shift Right send-to-output previous
+
+riverctl map normal Super+Shift F output-layout None
+riverctl map normal Super+Shift T output-layout rivertile
+riverctl map normal Super+Control F toggle-float
+riverctl map normal Super+Control M toggle-fullscreen
+
+riverctl map-pointer normal Super BTN_LEFT move-view
+riverctl map-pointer normal Super BTN_RIGHT resize-view
+riverctl map-pointer normal Super BTN_MIDDLE toggle-float
+
+# Tags
+
+for i in $(seq 9)
+do
+	tags=$((1 << ($i - 1)))
+	riverctl map normal Super $i set-focused-tags $tags
+	riverctl map normal Super+Shift $i set-view-tags $tags
+	riverctl map normal Super+Control $i toggle-focused-tags $tags
+done
+tags=$((1 << 9))
+riverctl map normal Super 0 set-focused-tags $tags
+riverctl map normal Super+Shift 0 set-view-tags $tags
+riverctl map normal Super+Control 0 toggle-focused-tags $tags
+riverctl map normal Super+Shift+Control 0 toggle-view-tags $tags
+
+# Rules
+
+riverctl rule-add -app-id "QjackCtl" float
+
+riverctl rule-add -app-id "codium" tags $((1 << 0))
+riverctl rule-add -app-id "org.telegram.desktop" tags $((1 << 6))
+riverctl rule-add -app-id "discord" tags $((1 << 7))
+riverctl rule-add -app-id "zen-alpha" tags $((1 << 8))
+riverctl rule-add -app-id "Logseq" tags $((1 << 9))
+
+riverctl rule-add -app-id "codium" ssd
+riverctl rule-add -app-id "org.telegram.desktop" ssd
+riverctl rule-add -app-id "discord" ssd
+riverctl rule-add -app-id "zen-alpha" ssd
+riverctl rule-add -app-id "Logseq" ssd
+
+# Config
+
+riverctl default-attach-mode bottom
+riverctl background-color 0x1e1e2e
+riverctl border-color-focused 0xcba6f7
+riverctl border-color-unfocused 0xcdd6f4
+riverctl border-color-urgent 0xfab387
+riverctl border-width 2
+riverctl focus-follows-cursor normal
+riverctl set-cursor-warp disabled
+riverctl set-repeat 50 300
+riverctl xcursor-theme "catppuccin-mocha-mauve-cursors" 26
+
+riverctl keyboard-layout -options  "grp:lalt_lshift_toggle" "us,ara"
+
+# Launch
+
+riverctl default-layout rivertile
+rivertile -view-padding 10 -outer-padding 10 -main-ratio 0.55 &

@@ -1,0 +1,10 @@
+[general]
+import = [ "~/.config/alacritty/catppuccin_mocha.toml" ]
+
+[font]
+size = 20
+
+normal      = { family="Cascadia Code", style="Regular" }
+bold        = { family="Cascadia Code", style="Bold" }
+italic      = { family="Cascadia Code", style="Italic" }
+bold_italic = { family="Cascadia Code", style="BoldItalic" }

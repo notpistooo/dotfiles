@@ -1,0 +1,40 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "modules-left": ["river/tags"],
+  "modules-center": ["river/window"],
+  "modules-right": ["cpu", "memory", "wireplumber", "clock"],
+  "river/tags": {
+    "num-tags": 10,
+    "tag-labels": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    "tooltip": false
+  },
+  "river/window": {
+    "max-length": 75,
+    "on-click": "alacritty -e btop",
+    "tooltip": false
+  },
+  "cpu": {
+    "format": "CPU: {usage}%",
+    "tooltip": false
+  },
+  "memory": {
+    "format": "RAM: {percentage}%",
+    "tooltip": false
+  },
+  "wireplumber": {
+    "format": "VOL: {volume}%",
+    "format-muted": "VOL: MUTED",
+    "scroll-step": 10,
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-middle": "qjackctl",
+    "tooltip": false
+  },
+  "clock": {
+    "format": "{:%I:%M %p}",
+    "format-alt": "{:%d-%m-%Y}",
+    "tooltip": false
+  }
+}
+
