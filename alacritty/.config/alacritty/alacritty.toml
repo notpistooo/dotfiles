@@ -1,0 +1,12 @@
+[general]
+import = [ "~/.config/alacritty/catppuccin_mocha.toml" ]
+
+[window]
+padding = { x = 10, y = 10 }
+
+[font]
+size = 18
+normal      = { family = "CaskaydiaCove Nerd Font Mono", style = "Regular" }
+bold        = { family = "CaskaydiaCove Nerd Font Mono", style = "Bold" }
+italic      = { family = "CaskaydiaCove Nerd Font Mono", style = "Italic" }
+bold_italic = { family = "CaskaydiaCove Nerd Font Mono", style = "Bold Italic" }
