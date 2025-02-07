@@ -1,0 +1,24 @@
+diff -uNr slock/config.def.h suckless/slock/config.def.h
+--- slock/config.def.h	2025-02-07 09:47:14.459846199 +0100
++++ suckless/slock/config.def.h	2025-01-31 16:07:17.325924285 +0100
+@@ -1,12 +1,14 @@
++#include "../colors.h"
++
+ /* user and group to drop privileges to */
+-static const char *user  = "nobody";
+-static const char *group = "nogroup";
++static const char *user  = "amine";
++static const char *group = "users";
+ 
+ static const char *colorname[NUMCOLS] = {
+-	[INIT] =   "black",     /* after initialization */
+-	[INPUT] =  "#005577",   /* during input */
+-	[FAILED] = "#CC3333",   /* wrong password */
++	[INIT] =   bg,     /* after initialization */
++	[INPUT] =  mn,   /* during input */
++	[FAILED] = gr,   /* wrong password */
+ };
+ 
+ /* treat a cleared input like a wrong password (color) */
+-static const int failonclear = 1;
++static const int failonclear = 0;
