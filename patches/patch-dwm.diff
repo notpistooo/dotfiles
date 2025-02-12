@@ -52,7 +52,7 @@ diff -uNr dwm/config.def.h suckless/dwm/config.def.h
 +	{ "alacritty",       NULL,     NULL,           0,         0,          1,           0,        -1 },
 +	{ "Sxiv",            NULL,     NULL,           0,         1,          0,           0,        -1 },
 +	{ "VSCodium",        NULL,     NULL,           1 << 0,    0,          0,          -1,         0 },
-+	{ "ONLYOFFICE Desktop Editors", NULL,     NULL,           1 << 1,    0,          0,          -1,         1 },
++	{ "ONLYOFFICE",      NULL,     NULL,           1 << 1,    0,          0,          -1,         1 },
 +	{ "Thunar",          NULL,     NULL,           1 << 2,    0,          0,          -1,         1 },
 +	{ "Blueman-manager", NULL,     NULL,           1 << 3,    0,          0,          -1,         1 },
 +	{ "Free Download Manager", NULL,     NULL,           1 << 5,    0,          0,          -1,         1 },
